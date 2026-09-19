@@ -10,8 +10,12 @@ const HR_NAV = [
   { href: "/admin/employees", label: "Employees" },
   { href: "/admin/payments", label: "Payments" },
   { href: "/admin/settlement", label: "Settlement" },
-  { href: "/admin/reports", label: "Reports" },
-  { href: "/admin/settings", label: "Settings" }
+  { href: "/admin/reports", label: "Reports" }
+];
+
+const SUPER_ADMIN_ONLY_NAV = [
+  { href: "/admin/settings", label: "Settings" },
+  { href: "/admin/audit", label: "Audit Log" }
 ];
 
 const EMPLOYEE_NAV = [
@@ -30,7 +34,8 @@ export default function Shell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const nav = role === "EMPLOYEE" ? EMPLOYEE_NAV : HR_NAV;
+  const baseNav = role === "EMPLOYEE" ? EMPLOYEE_NAV : HR_NAV;
+  const nav = role === "SUPER_ADMIN" ? [...baseNav, ...SUPER_ADMIN_ONLY_NAV] : baseNav;
 
   async function logout() {
     await apiPost("/api/auth/logout");
@@ -60,16 +65,6 @@ export default function Shell({
               </Link>
             );
           })}
-          {role === "SUPER_ADMIN" && (
-            <Link
-              href="/admin/audit"
-              className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                pathname?.startsWith("/admin/audit") ? "bg-brand-600 text-white" : "text-white/70 hover:bg-white/10"
-              }`}
-            >
-              Audit Log
-            </Link>
-          )}
         </nav>
         <div className="px-5 py-4 border-t border-white/10 text-xs text-white/50">v1.0.0</div>
       </aside>

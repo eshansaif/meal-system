@@ -2,12 +2,23 @@ import { prisma } from "@/lib/db";
 import { ok, withRoute, requireRole, ApiError } from "@/lib/api";
 import { mealResponseSchema } from "@/lib/validation";
 import { todayInOrgTz, isPastCutoff, normalizeDate } from "@/lib/dates";
+import { isWorkingDay } from "@/lib/orgSettings";
+
+const MAX_DAYS_AHEAD = 62; // roughly two months — plenty for "plan the whole month ahead"
 
 /**
- * POST /api/meal-response — employee submits/modifies today's meal response.
- * Cutoff is enforced here, server-side, regardless of what the frontend
- * countdown shows. Uses upsert on the (employee, mealType, date) unique key
- * so duplicate/retried requests are idempotent and never create duplicate rows.
+ * POST /api/meal-response — employee submits/modifies their meal response
+ * for TODAY or any FUTURE date (e.g. cancelling a single day inside a
+ * month they already planned via the bulk "select whole month" action).
+ *
+ * Cutoff is enforced here, server-side, per the target date — not just for
+ * today — regardless of what the frontend countdown shows:
+ *   - a date before today is always rejected (nothing to change any more)
+ *   - today is locked once its cutoff time has passed
+ *   - any future date remains open until IT becomes today and passes cutoff
+ *
+ * Uses upsert on the (employee, mealType, date) unique key so duplicate /
+ * retried requests are idempotent and never create duplicate rows.
  */
 export const POST = withRoute(async (req: Request) => {
   const user = await requireRole("EMPLOYEE");
@@ -17,8 +28,14 @@ export const POST = withRoute(async (req: Request) => {
   const date = body.date ? normalizeDate(body.date) : todayInOrgTz();
   const today = todayInOrgTz();
 
-  if (date.getTime() !== today.getTime()) {
-    throw new ApiError("You can only respond for today", "INVALID_DATE", 400);
+  if (date.getTime() < today.getTime()) {
+    throw new ApiError("You cannot change a response for a past date", "PAST_DATE", 400);
+  }
+
+  const maxDate = new Date(today);
+  maxDate.setUTCDate(maxDate.getUTCDate() + MAX_DAYS_AHEAD);
+  if (date.getTime() > maxDate.getTime()) {
+    throw new ApiError(`You can only plan up to ${MAX_DAYS_AHEAD} days ahead`, "TOO_FAR_AHEAD", 400);
   }
 
   const mealType = await prisma.mealType.findUnique({ where: { id: body.mealTypeId } });
@@ -26,14 +43,14 @@ export const POST = withRoute(async (req: Request) => {
     throw new ApiError("This meal type is not currently active", "MEAL_TYPE_DISABLED", 400);
   }
 
-  const holiday = await prisma.calendarException.findUnique({ where: { date } });
-  if (holiday?.type === "HOLIDAY") {
-    throw new ApiError("Today is a holiday — no meal response is required", "HOLIDAY", 400);
+  const workingDay = await isWorkingDay(date);
+  if (!workingDay) {
+    throw new ApiError("This date is a holiday or non-working day — no meal response is needed", "NON_WORKING_DAY", 400);
   }
 
   if (isPastCutoff(date, mealType.cutoffTime)) {
     throw new ApiError(
-      `The response window closed at ${mealType.cutoffTime}. Your response is now locked for today.`,
+      `The response window for this date closed at ${mealType.cutoffTime}. It is now locked.`,
       "CUTOFF_PASSED",
       409
     );
@@ -59,11 +76,15 @@ export const POST = withRoute(async (req: Request) => {
       date,
       status: body.status,
       respondedAt: new Date(),
-      lastModifiedAt: new Date()
+      lastModifiedAt: new Date(),
+      isMonthlyDefault: false
     },
     update: {
       status: body.status,
-      lastModifiedAt: new Date()
+      lastModifiedAt: new Date(),
+      // An individual, explicit change always overrides whatever the
+      // monthly bulk plan had set — it's no longer "just the default".
+      isMonthlyDefault: false
     }
   });
 

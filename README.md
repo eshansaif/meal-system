@@ -32,7 +32,41 @@ single organization's HR/Admin team and its employees.
 
 ---
 
-## 2. What's included vs. simplified (read this before judging "completeness")
+## 2. Changelog
+
+**v1.1** (this delivery):
+- Bumped Next.js to `^14.2.25` — the earlier `14.2.15` pin had known, since-patched
+  security advisories (including a middleware authorization bypass); the caret
+  range means `npm install` always pulls the latest patched 14.2.x.
+- **Plan-the-whole-month meal responses.** Employees can tap "Set Whole Month"
+  on the dashboard to mark every remaining working day as "Taking Lunch" in
+  one action, then cancel any individual future day from the new "This
+  Month's Lunch Plan" list — each day stays editable up until *that day's*
+  own cutoff, not just today's (`POST /api/meal-response/monthly`,
+  `GET /api/meal-response/range`, and `POST /api/meal-response` now accepts
+  any future date instead of only today).
+- **Configurable working days + office-closed dates.** Added an `OrgSetting`
+  key/value table (`GET/PATCH /api/settings/working-days`) so the weekly
+  pattern (default Sun–Thu) isn't hardcoded. Marking a date a **Holiday**
+  under Settings now cascades: it auto-cancels every employee's response for
+  that date, un-charges any consumption already recorded, and recomputes the
+  affected settlements — so "office is closed this day" reliably means
+  nobody is charged for a meal that day, no manual cleanup needed.
+- **Fixed: HR/Admin clicking "Settings" appeared to silently fail.** Settings
+  and Audit Log are Super-Admin-only pages, but the sidebar was showing them
+  to HR/Admin too, so clicking them triggered a real (correct) redirect that
+  looked like a bug. The sidebar now only shows those two links to Super Admin.
+- **Fixed: pages felt slow / stuck on "Loading…" repeatedly.** Every page
+  was a client component that first fetched `/api/auth/me` to check who was
+  logged in *before* rendering anything, so every navigation showed a loading
+  flash for auth, then another for the page's own data. All pages are now
+  Server Components that resolve the session on the server (zero extra
+  round-trip, nothing to flash) and hand it down to a client component as a
+  prop. The heavier list/table pages (Daily Roster, Employees, Payments,
+  Settlement, Audit, Reports, My Meals, HR Dashboard) also now show proper
+  skeleton placeholders instead of blank tables while their data loads.
+
+## 3. What's included vs. simplified (read this before judging "completeness")
 
 The original spec (60 sections) describes a multi-week enterprise build.
 This delivery implements the **entire financial and operational core** for
@@ -58,6 +92,10 @@ than broadly fake:
 - Audit log for all financial/critical actions (price change, payment
   void, serving override, employee deactivate, etc.)
 - Search + filter + server-side pagination on every large table
+- Monthly meal planning: employees can bulk-set a whole month to "Taking
+  Lunch" and cancel individual future days any time before that day's own
+  cutoff; configurable working-week pattern; marking a date a Holiday
+  cascades to cancel that day's responses and un-charge consumption
 - Seed script with 20 employees, realistic Sept 2026 meal history, a real
   price change (Sep ৳100 → Oct ৳110), and all four payment states
 
@@ -79,7 +117,7 @@ this codebase, not a rewrite.
 
 ---
 
-## 3. Business Rules (the parts that must never be "wrong")
+## 4. Business Rules (the parts that must never be "wrong")
 
 **Meal cost.** A meal is only chargeable when its serving status is `SERVED`
 or `EXTRA` (configurable per meal type via `chargeOnServedOnly`). An
@@ -117,7 +155,7 @@ stay on the row forever. Settlement totals exclude voided payments.
 
 ---
 
-## 4. Roles & Permission Summary
+## 5. Roles & Permission Summary
 
 | Action | Super Admin | HR/Admin | Employee |
 |---|---|---|---|
@@ -135,7 +173,7 @@ stay on the row forever. Settlement totals exclude voided payments.
 
 ---
 
-## 5. Database Schema (ERD, text form)
+## 6. Database Schema (ERD, text form)
 
 ```
 Department 1───* Employee 1───1 User
@@ -163,7 +201,7 @@ Key constraints:
 
 ---
 
-## 6. API Overview
+## 7. API Overview
 
 All endpoints return `{ success, message, data? , code? }`. Errors use
 appropriate HTTP status codes (`401`, `403`, `404`, `409`, `422`, `500`).
@@ -181,12 +219,16 @@ appropriate HTTP status codes (`401`, `403`, `404`, `409`, `422`, `500`).
 | PATCH | `/api/meal-types/:id` | Enable/disable, cutoff, rules |
 | GET/POST | `/api/meal-types/:id/price` | Price history / set new price |
 | GET | `/api/meal-response/today` | Today's status for logged-in employee |
-| POST | `/api/meal-response` | Submit/modify today's response (cutoff enforced) |
+| POST | `/api/meal-response` | Submit/modify a response for today or any future date (cutoff enforced per-date) |
+| POST | `/api/meal-response/monthly` | "Set Whole Month" bulk plan (skips holidays/weekends/explicit cancellations) |
+| GET | `/api/meal-response/range` | Per-day status across a date range, for the "This Month's Plan" list |
 | GET/POST | `/api/serving` | Daily roster / bulk mark serving status |
 | GET/POST | `/api/payments` | List (search/filter/paginate) / record |
 | POST | `/api/payments/:id/void` | Void with required reason |
 | GET/POST | `/api/settlement` | Monthly table / recompute |
-| GET/POST | `/api/holidays` | List / add calendar exceptions |
+| GET/POST | `/api/holidays` | List / add calendar exceptions (adding a HOLIDAY cascades: cancels that date's responses & un-charges consumption) |
+| DELETE | `/api/holidays/:id` | Remove a calendar exception |
+| GET/PATCH | `/api/settings/working-days` | View / set which weekdays count as working days (Super Admin) |
 | GET | `/api/reports/daily` \| `monthly` \| `department` | Report JSON |
 | GET | `/api/reports/employee/:id` | Employee bill JSON |
 | GET | `/api/export/excel?report=...` | Excel download (daily/monthly/department/employee-bill) |
@@ -196,7 +238,7 @@ appropriate HTTP status codes (`401`, `403`, `404`, `409`, `422`, `500`).
 
 ---
 
-## 7. Local Setup
+## 8. Local Setup
 
 ### Prerequisites
 - Node.js 20+
@@ -239,7 +281,7 @@ Open http://localhost:3000 — you'll land on `/login`.
 
 ---
 
-## 8. Deploying to Vercel (free tier, step by step)
+## 9. Deploying to Vercel (free tier, step by step)
 
 **8.1 — Push this project to GitHub** (Vercel deploys from a Git repo).
 ```bash
@@ -288,7 +330,7 @@ subsequent `git push` to `main` redeploys automatically.
 
 ---
 
-## 9. Project Structure
+## 10. Project Structure
 
 ```
 prisma/
@@ -316,7 +358,7 @@ src/
 
 ---
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 - **"Cannot find module '@prisma/client'"** — run `npm install` then
   `npx prisma generate` (also runs automatically via `postinstall`).
@@ -332,7 +374,7 @@ src/
 
 ---
 
-## 11. Security Checklist Before Going Live
+## 12. Security Checklist Before Going Live
 
 - [ ] Rotate `JWT_SECRET` and every seeded demo password
 - [ ] Put the app behind HTTPS (Vercel does this by default)

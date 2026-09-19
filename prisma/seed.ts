@@ -44,6 +44,13 @@ async function main() {
     create: { code: "DINNER", name: "Dinner", isEnabled: false, cutoffTime: "17:00" }
   });
 
+  // --- Working days: Sunday-Thursday (Bangladesh standard office week) ---
+  await prisma.orgSetting.upsert({
+    where: { key: "WORKING_DAYS" },
+    update: {},
+    create: { key: "WORKING_DAYS", value: [0, 1, 2, 3, 4] }
+  });
+
   // --- Price history: Sep = 100, Oct = 110 ---
   const priceSep = await prisma.mealPriceHistory.create({
     data: {

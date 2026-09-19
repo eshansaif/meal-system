@@ -1,19 +1,9 @@
-"use client";
+import { redirect } from "next/navigation";
+import { getOptionalSession } from "@/lib/serverSession";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { apiGet } from "@/lib/apiClient";
-
-export default function Home() {
-  const router = useRouter();
-  useEffect(() => {
-    apiGet("/api/auth/me").then((res) => {
-      if (res.success && res.data) {
-        router.replace(res.data.role === "EMPLOYEE" ? "/dashboard" : "/admin/dashboard");
-      } else {
-        router.replace("/login");
-      }
-    });
-  }, [router]);
-  return <div className="min-h-screen flex items-center justify-center text-ink-400">Loading…</div>;
+// Resolved entirely on the server — no client fetch, no flash of "Loading…".
+export default async function Home() {
+  const session = await getOptionalSession();
+  if (!session) redirect("/login");
+  redirect(session.role === "EMPLOYEE" ? "/dashboard" : "/admin/dashboard");
 }

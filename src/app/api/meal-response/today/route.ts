@@ -20,7 +20,7 @@ export const GET = withRoute(async (req: Request) => {
     where: { employeeId_mealTypeId_date: { employeeId: user.employee.id, mealTypeId, date: today } }
   });
 
-  const locked = isPastCutoff(today, mealType.cutoffTime) || (holiday?.type === "HOLIDAY" ?? false);
+  const locked = isPastCutoff(today, mealType.cutoffTime) || holiday?.type === "HOLIDAY";
 
   return ok({
     date: today,

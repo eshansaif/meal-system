@@ -144,6 +144,18 @@ model CalendarException {
 }
 
 // ----------------------------------------------------------------------------
+// GENERIC ORG SETTINGS (key/value) — e.g. which weekdays are working days.
+// Extensible without further migrations for simple config values.
+// ----------------------------------------------------------------------------
+
+model OrgSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+// ----------------------------------------------------------------------------
 // DAILY MEAL RESPONSE  (employee's stated intent, per employee/date/mealtype)
 // ----------------------------------------------------------------------------
 
@@ -166,6 +178,7 @@ model MealResponse {
   lastModifiedAt DateTime?
   isOverride   Boolean        @default(false) // true if HR/Admin overrode the employee's choice
   overriddenByUserId String?
+  isMonthlyDefault Boolean    @default(false) // true if set via the "select whole month" bulk action, not an individual tap
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

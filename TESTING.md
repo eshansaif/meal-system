@@ -75,6 +75,23 @@ carry all the financial correctness.
 - [ ] Combine two filters at once (e.g. department + payment status) and
       confirm both apply together, not just the last one changed
 
+## Monthly Planning & Working Days
+- [ ] As an employee, tap "Set Whole Month" — confirm every remaining
+      working day this month becomes `TAKING`, and weekends/holidays are
+      skipped
+- [ ] After planning the month, cancel one specific future day from the
+      list — confirm only that day changes to `NOT_TAKING`, the rest stay
+      `TAKING`
+- [ ] Try to cancel a day that's already past its cutoff (e.g. today after
+      cutoff) — the row should show "Locked" with no action available
+- [ ] As Super Admin, change the working-days pattern (e.g. remove
+      Thursday) — confirm "Set Whole Month" no longer plans Thursdays
+- [ ] As Super Admin, add a Holiday for a date that already has `TAKING`
+      responses and a `SERVED` consumption recorded — confirm those
+      responses flip to `NOT_TAKING`/locked, the consumption is `CANCELLED`
+      with `chargeAmount` reset to 0, and the employee's settlement for that
+      month recomputes to reflect the removed charge
+
 ## Edge Cases (spec §53)
 - [ ] Employee with zero meal history this month — dashboard/bill should
       show zeros, not crash

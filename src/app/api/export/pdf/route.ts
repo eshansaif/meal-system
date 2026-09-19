@@ -43,7 +43,7 @@ export async function GET(req: Request) {
 
     await writeAudit({ userId: user.id, action: "REPORT_EXPORT", entity: "Report", reason: `${report} (pdf)` });
 
-    return new Response(buffer, {
+    return new Response(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${filename}"`

@@ -1,0 +1,319 @@
+// ============================================================================
+// Office Employee Meal & Cost Management System — Database Schema
+// PostgreSQL + Prisma
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------------------------------
+// AUTH / USERS / ROLES
+// ----------------------------------------------------------------------------
+
+enum Role {
+  SUPER_ADMIN
+  HR_ADMIN
+  EMPLOYEE
+  CATERING
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         Role
+  isActive     Boolean  @default(true)
+  employee     Employee?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  auditLogs    AuditLog[]
+
+  @@index([role])
+}
+
+// ----------------------------------------------------------------------------
+// ORGANIZATION STRUCTURE
+// ----------------------------------------------------------------------------
+
+model Department {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  isActive  Boolean    @default(true)
+  employees Employee[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Employee {
+  id            String         @id @default(cuid())
+  employeeCode  String         @unique // human-friendly ID, e.g. EMP-0001
+  name          String
+  email         String         @unique
+  phone         String?
+  designation   String?
+  departmentId  String
+  department    Department     @relation(fields: [departmentId], references: [id])
+  joiningDate   DateTime
+  leavingDate   DateTime?
+  status        EmployeeStatus @default(ACTIVE)
+  userId        String         @unique
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  mealResponses    MealResponse[]
+  mealConsumptions MealConsumption[]
+  payments         Payment[]
+  settlements      Settlement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([departmentId])
+  @@index([status])
+  @@index([name])
+}
+
+// ----------------------------------------------------------------------------
+// MEAL CONFIGURATION
+// ----------------------------------------------------------------------------
+
+enum MealTypeCode {
+  BREAKFAST
+  LUNCH
+  DINNER
+}
+
+model MealType {
+  id         String   @id @default(cuid())
+  code       MealTypeCode @unique
+  name       String
+  isEnabled  Boolean  @default(false)
+  cutoffTime String   // "HH:mm" 24h, interpreted in ORG_TIMEZONE
+  chargeOnServedOnly Boolean @default(true) // business rule: only charge for SERVED meals
+  allowModificationBeforeCutoff Boolean @default(true)
+
+  priceHistory     MealPriceHistory[]
+  mealResponses    MealResponse[]
+  mealConsumptions MealConsumption[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MealPriceHistory {
+  id            String    @id @default(cuid())
+  mealTypeId    String
+  mealType      MealType  @relation(fields: [mealTypeId], references: [id])
+  unitPrice     Decimal   @db.Decimal(10, 2)
+  effectiveFrom DateTime // date (time truncated to 00:00 in ORG_TIMEZONE)
+  effectiveTo   DateTime? // null = still active
+  isActive      Boolean   @default(true)
+  createdByUserId String?
+  createdAt     DateTime  @default(now())
+
+  mealConsumptions MealConsumption[]
+
+  @@index([mealTypeId, effectiveFrom])
+}
+
+// ----------------------------------------------------------------------------
+// HOLIDAYS / WORKING DAYS
+// ----------------------------------------------------------------------------
+
+enum DayType {
+  HOLIDAY
+  SPECIAL_WORKING_DAY
+}
+
+model CalendarException {
+  id        String   @id @default(cuid())
+  date      DateTime @unique // normalized to 00:00
+  type      DayType
+  label     String
+  createdAt DateTime @default(now())
+}
+
+// ----------------------------------------------------------------------------
+// DAILY MEAL RESPONSE  (employee's stated intent, per employee/date/mealtype)
+// ----------------------------------------------------------------------------
+
+enum ResponseStatus {
+  NO_RESPONSE
+  TAKING
+  NOT_TAKING
+}
+
+model MealResponse {
+  id           String         @id @default(cuid())
+  employeeId   String
+  employee     Employee       @relation(fields: [employeeId], references: [id])
+  mealTypeId   String
+  mealType     MealType       @relation(fields: [mealTypeId], references: [id])
+  date         DateTime       // normalized to 00:00 in ORG_TIMEZONE
+  status       ResponseStatus @default(NO_RESPONSE)
+  isLocked     Boolean        @default(false)
+  respondedAt  DateTime?
+  lastModifiedAt DateTime?
+  isOverride   Boolean        @default(false) // true if HR/Admin overrode the employee's choice
+  overriddenByUserId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([employeeId, mealTypeId, date]) // prevents duplicate responses (also enforced via upsert)
+  @@index([date])
+  @@index([mealTypeId, date])
+  @@index([status])
+}
+
+// ----------------------------------------------------------------------------
+// MEAL SERVING / CONSUMPTION (the operational + billable record)
+// ----------------------------------------------------------------------------
+
+enum ServingStatus {
+  PENDING
+  SERVED
+  NOT_SERVED
+  CANCELLED
+  EXTRA
+}
+
+model MealConsumption {
+  id              String        @id @default(cuid())
+  employeeId      String
+  employee        Employee      @relation(fields: [employeeId], references: [id])
+  mealTypeId      String
+  mealType        MealType      @relation(fields: [mealTypeId], references: [id])
+  date            DateTime      // normalized to 00:00
+  servingStatus   ServingStatus @default(PENDING)
+  servedAt        DateTime?
+
+  // Billing snapshot — set at the time the record becomes chargeable.
+  // Immutable once set, so later price changes never alter historical charges.
+  unitPriceApplied Decimal?     @db.Decimal(10, 2)
+  priceHistoryId   String?
+  priceHistory     MealPriceHistory? @relation(fields: [priceHistoryId], references: [id])
+  isChargeable     Boolean      @default(false)
+  chargeAmount     Decimal      @default(0) @db.Decimal(10, 2)
+
+  settlementMonth  String?      // "YYYY-MM" — which settlement period this charge belongs to
+  remarks          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([employeeId, mealTypeId, date])
+  @@index([date])
+  @@index([mealTypeId, date])
+  @@index([servingStatus])
+  @@index([settlementMonth])
+  @@index([employeeId, settlementMonth])
+}
+
+// ----------------------------------------------------------------------------
+// PAYMENTS
+// ----------------------------------------------------------------------------
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  MOBILE_BANKING
+  OTHER
+}
+
+enum PaymentStatusFlag {
+  ACTIVE
+  VOIDED
+}
+
+model Payment {
+  id               String            @id @default(cuid())
+  employeeId       String
+  employee         Employee          @relation(fields: [employeeId], references: [id])
+  paymentDate      DateTime
+  amount           Decimal           @db.Decimal(10, 2)
+  method           PaymentMethod
+  referenceNo      String?
+  settlementMonth  String            // "YYYY-MM"
+  remarks          String?
+  status           PaymentStatusFlag @default(ACTIVE)
+  voidReason       String?
+  voidedAt         DateTime?
+  voidedByUserId   String?
+  recordedByUserId String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@index([employeeId, settlementMonth])
+  @@index([settlementMonth])
+  @@index([paymentDate])
+  @@index([status])
+  @@index([referenceNo])
+}
+
+// ----------------------------------------------------------------------------
+// MONTHLY SETTLEMENT (materialized snapshot per employee/month — recomputable)
+// ----------------------------------------------------------------------------
+
+enum PaymentStatus {
+  PAID
+  PARTIALLY_PAID
+  UNPAID
+  OVERPAID
+}
+
+model Settlement {
+  id                  String        @id @default(cuid())
+  employeeId          String
+  employee            Employee      @relation(fields: [employeeId], references: [id])
+  settlementMonth     String        // "YYYY-MM"
+  mealsServed         Int           @default(0)
+  mealCost            Decimal       @default(0) @db.Decimal(10, 2)
+  previousOutstanding Decimal       @default(0) @db.Decimal(10, 2)
+  paymentsThisMonth   Decimal       @default(0) @db.Decimal(10, 2)
+  totalPaid           Decimal       @default(0) @db.Decimal(10, 2)
+  outstanding         Decimal       @default(0) @db.Decimal(10, 2)
+  credit              Decimal       @default(0) @db.Decimal(10, 2)
+  paymentStatus       PaymentStatus @default(UNPAID)
+  isFinalized         Boolean       @default(false)
+  finalizedAt         DateTime?
+  finalizedByUserId   String?
+  computedAt          DateTime      @default(now())
+
+  @@unique([employeeId, settlementMonth])
+  @@index([settlementMonth])
+  @@index([paymentStatus])
+}
+
+// ----------------------------------------------------------------------------
+// AUDIT LOG
+// ----------------------------------------------------------------------------
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  action        String   // e.g. "PAYMENT_CREATE", "PAYMENT_VOID", "PRICE_CHANGE", "MEAL_OVERRIDE"
+  entity        String   // e.g. "Payment", "MealResponse"
+  entityId      String?
+  previousValue Json?
+  newValue      Json?
+  reason        String?
+  ipAddress     String?
+  createdAt     DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}

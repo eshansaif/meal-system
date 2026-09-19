@@ -1,0 +1,17 @@
+# Optional: spin up a local Postgres for development.
+# Run: docker compose up -d
+version: "3.8"
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: meal_user
+      POSTGRES_PASSWORD: meal_pass
+      POSTGRES_DB: meal_system
+    ports:
+      - "5432:5432"
+    volumes:
+      - meal_db_data:/var/lib/postgresql/data
+volumes:
+  meal_db_data:

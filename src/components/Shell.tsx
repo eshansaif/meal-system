@@ -28,7 +28,7 @@ export default function Shell({
   name,
   children
 }: {
-  role: "SUPER_ADMIN" | "HR_ADMIN" | "EMPLOYEE";
+  role: "SUPER_ADMIN" | "HR_ADMIN" | "EMPLOYEE" | "CATERING";
   name: string;
   children: React.ReactNode;
 }) {

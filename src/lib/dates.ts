@@ -52,9 +52,16 @@ export function isPastCutoff(date: Date, cutoffTime: string): boolean {
   return nowMinutes >= cutoffMinutes;
 }
 
-export function formatCurrency(amount: number | string, symbol = process.env.CURRENCY_SYMBOL || "৳"): string {
-  const n = typeof amount === "string" ? parseFloat(amount) : amount;
-  return `${symbol}${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+export function formatCurrency(
+  amount: number | string | { toString(): string },
+  symbol = process.env.CURRENCY_SYMBOL || "৳"
+): string {
+  const n = typeof amount === "number" ? amount : parseFloat(amount.toString());
+
+  return `${symbol}${n.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 export function humanDate(d: Date): string {

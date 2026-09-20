@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
-import { getOptionalSession } from "@/lib/serverSession";
+import { getOptionalSession, homeFor } from "@/lib/serverSession";
 
 // Resolved entirely on the server — no client fetch, no flash of "Loading…".
 export default async function Home() {
   const session = await getOptionalSession();
   if (!session) redirect("/login");
-  redirect(session.role === "EMPLOYEE" ? "/dashboard" : "/admin/dashboard");
+  redirect(homeFor(session.role));
 }

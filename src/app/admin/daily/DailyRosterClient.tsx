@@ -82,8 +82,8 @@ export default function DailyRosterClient({ session }: { session: ServerSession 
       <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
         <h1 className="text-xl font-semibold text-ink-900">Daily Meal Roster</h1>
         <div className="flex gap-2">
-          <button className="btn btn-secondary" onClick={() => downloadFile(`/api/export/excel?report=daily&date=${date}&mealTypeId=${mealTypeId}`)}>⬇ Excel</button>
-          <button className="btn btn-secondary" onClick={() => downloadFile(`/api/export/pdf?report=daily&date=${date}&mealTypeId=${mealTypeId}`)}>⬇ PDF (Catering sheet)</button>
+          <button className="btn btn-success" onClick={() => downloadFile(`/api/export/excel?report=daily&date=${date}&mealTypeId=${mealTypeId}`)}>⬇ Excel</button>
+          <button className="btn btn-purple" onClick={() => downloadFile(`/api/export/pdf?report=daily&date=${date}&mealTypeId=${mealTypeId}`)}>⬇ PDF (Catering sheet)</button>
         </div>
       </div>
 
@@ -92,7 +92,7 @@ export default function DailyRosterClient({ session }: { session: ServerSession 
           <label className="label">Date</label>
           <input type="date" className="input" value={date} onChange={(e) => { setDate(e.target.value); setPage(1); }} />
         </div>
-        <div className="w-56">
+        <div className="w-full sm:w-56">
           <label className="label">Search (ID / Name / Email)</label>
           <input className="input" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search employee…" />
         </div>
@@ -124,17 +124,17 @@ export default function DailyRosterClient({ session }: { session: ServerSession 
       {selected.size > 0 && (
         <div className="card p-3 mb-4 flex items-center gap-2 bg-brand-50 border-brand-100">
           <span className="text-sm text-brand-800 font-medium">{selected.size} selected</span>
-          <button className="btn btn-primary" onClick={() => bulkUpdate("SERVED")}>Mark Served</button>
-          <button className="btn btn-secondary" onClick={() => bulkUpdate("NOT_SERVED")}>Mark Not Served</button>
-          <button className="btn btn-secondary" onClick={() => bulkUpdate("EXTRA")}>Mark Extra</button>
-          <button className="btn btn-secondary" onClick={() => bulkUpdate("CANCELLED")}>Cancel</button>
+          <button className="btn btn-success" onClick={() => bulkUpdate("SERVED")}>✅ Mark Served</button>
+          <button className="btn btn-outline-danger" onClick={() => bulkUpdate("NOT_SERVED")}>✕ Mark Not Served</button>
+          <button className="btn btn-purple" onClick={() => bulkUpdate("EXTRA")}>+ Mark Extra</button>
+          <button className="btn btn-warning" onClick={() => bulkUpdate("CANCELLED")}>⊘ Cancel</button>
         </div>
       )}
 
       {loading ? (
         <TableSkeleton rows={8} cols={8} />
       ) : (
-        <div className="card overflow-hidden">
+        <div className="card overflow-x-auto">
           <table className="data-table">
             <thead>
               <tr>

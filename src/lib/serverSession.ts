@@ -9,8 +9,18 @@ export interface ServerSession {
   employeeId: string | null;
 }
 
-function homeFor(role: Role) {
-  return role === "EMPLOYEE" ? "/dashboard" : "/admin/dashboard";
+/** Roles that have a real portal in this app today. Any other role (e.g.
+ * CATERING, which has no dedicated UI yet — see README) is routed to a
+ * neutral "pending access" page instead of bouncing between admin/employee
+ * homes, which would otherwise redirect-loop. */
+const PORTAL_HOME: Partial<Record<Role, string>> = {
+  EMPLOYEE: "/dashboard",
+  HR_ADMIN: "/admin/dashboard",
+  SUPER_ADMIN: "/admin/dashboard"
+};
+
+export function homeFor(role: Role): string {
+  return PORTAL_HOME[role] ?? "/pending-access";
 }
 
 /**

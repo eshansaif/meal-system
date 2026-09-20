@@ -25,7 +25,7 @@ export default function HrDashboard({ session }: { session: ServerSession }) {
         </>
       ) : (
         <>
-          <SectionTitle>Today's Lunch — Operational</SectionTitle>
+          <SectionTitle>Today’s Lunch — Operational</SectionTitle>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <Stat label="Active Employees" value={data.operational.totalActiveEmployees} />
             <Stat label="Taking Lunch" value={data.operational.taking} accent="text-emerald-600" />

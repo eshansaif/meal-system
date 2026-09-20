@@ -33,12 +33,34 @@ export async function requireRole(...roles: Role[]) {
   return user;
 }
 
+/**
+ * Next.js internally throws special control-flow "errors" that must always
+ * propagate up and never be treated as real failures:
+ *  - DYNAMIC_SERVER_USAGE — thrown when a route uses cookies()/headers() and
+ *    is therefore correctly dynamic, not static. Expected and harmless for
+ *    every authenticated route in this app; swallowing it just produces a
+ *    scary-looking (but meaningless) "Unhandled API error" in build logs.
+ *  - NEXT_REDIRECT / NEXT_NOT_FOUND — thrown by redirect()/notFound().
+ * None of these should ever be logged or converted into a JSON error
+ * response — they must be re-thrown so Next.js's own machinery can handle them.
+ */
+export function isNextControlFlowError(err: any): boolean {
+  const digest = err?.digest;
+  return (
+    typeof digest === "string" &&
+    (digest === "DYNAMIC_SERVER_USAGE" || digest.startsWith("NEXT_REDIRECT") || digest === "NEXT_NOT_FOUND")
+  );
+}
+
 /** Wraps a route handler, converting ApiError / ZodError into consistent JSON responses. */
 export function withRoute(handler: (req: Request, ctx: any) => Promise<NextResponse>) {
   return async (req: Request, ctx: any) => {
     try {
       return await handler(req, ctx);
     } catch (err: any) {
+      if (isNextControlFlowError(err)) {
+        throw err;
+      }
       if (err instanceof ApiError) {
         return fail(err.message, err.code, err.status);
       }

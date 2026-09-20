@@ -105,7 +105,7 @@ export default function DashboardClient({ session }: { session: ServerSession })
 
   return (
     <Shell role={session.role} name={session.name}>
-      <h1 className="text-xl font-semibold text-ink-900 mb-4">Today's Lunch</h1>
+      <h1 className="text-xl font-semibold text-ink-900 mb-4">Today’s Lunch</h1>
 
       {pageLoading ? (
         <CardSkeleton lines={2} />
@@ -137,14 +137,14 @@ export default function DashboardClient({ session }: { session: ServerSession })
             <button
               disabled={submitting}
               onClick={() => respond("TAKING")}
-              className={`btn flex-1 py-3 text-base ${today?.status === "TAKING" ? "btn-primary" : "btn-secondary"}`}
+              className={`btn flex-1 py-3 text-base ${today?.status === "TAKING" ? "btn-success" : "btn-outline-success"}`}
             >
               ✅ YES, TAKE MY LUNCH
             </button>
             <button
               disabled={submitting}
               onClick={() => respond("NOT_TAKING")}
-              className={`btn flex-1 py-3 text-base ${today?.status === "NOT_TAKING" ? "btn-danger" : "btn-secondary"}`}
+              className={`btn flex-1 py-3 text-base ${today?.status === "NOT_TAKING" ? "btn-danger" : "btn-outline-danger"}`}
             >
               ❌ NO, I WILL NOT TAKE LUNCH
             </button>
@@ -159,8 +159,7 @@ export default function DashboardClient({ session }: { session: ServerSession })
             <div>
               <div className="font-medium text-ink-900">Planning to eat lunch all month?</div>
               <p className="text-sm text-ink-500 mt-0.5">
-                Set every remaining working day this month to "Taking Lunch" in one tap. You can still cancel any
-                individual day below, any time before that day's cutoff.
+                {'Set every remaining working day this month to "Taking Lunch" in one tap. You can still cancel any individual day below, any time before that day\u2019s cutoff.'}
               </p>
             </div>
             <button className="btn btn-primary whitespace-nowrap" onClick={() => setConfirmMonthPlan(true)}>
@@ -192,7 +191,7 @@ export default function DashboardClient({ session }: { session: ServerSession })
           </div>
 
           <h2 className="text-lg font-semibold text-ink-900 mb-3">Recent Meal History</h2>
-          <div className="card overflow-hidden">
+          <div className="card overflow-x-auto">
             <table className="data-table">
               <thead>
                 <tr>
@@ -270,8 +269,8 @@ function MonthPlan({ mealTypeId, onChanged }: { mealTypeId: string; onChanged: (
   const workingDays = days.filter((d) => d.isWorkingDay);
 
   return (
-    <div className="card overflow-hidden mb-6">
-      <div className="px-4 py-3 border-b border-ink-100 font-medium text-ink-900">This Month's Lunch Plan</div>
+    <div className="card overflow-x-auto mb-6">
+      <div className="px-4 py-3 border-b border-ink-100 font-medium text-ink-900">This Month’s Lunch Plan</div>
       {loading ? (
         <div className="p-2"><TableSkeleton rows={4} cols={3} /></div>
       ) : workingDays.length === 0 ? (
@@ -292,18 +291,18 @@ function MonthPlan({ mealTypeId, onChanged }: { mealTypeId: string; onChanged: (
                   ) : (
                     <div className="flex gap-2">
                       <button
-                        className="btn btn-secondary text-xs"
+                        className="btn btn-outline-success text-xs"
                         disabled={busyDate === d.date || d.status === "TAKING"}
                         onClick={() => setDay(d.date, "TAKING")}
                       >
-                        Take
+                        ✅ Take
                       </button>
                       <button
-                        className="btn btn-secondary text-xs"
+                        className="btn btn-outline-danger text-xs"
                         disabled={busyDate === d.date || d.status === "NOT_TAKING"}
                         onClick={() => setDay(d.date, "NOT_TAKING")}
                       >
-                        Cancel
+                        ✕ Cancel
                       </button>
                     </div>
                   )}

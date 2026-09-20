@@ -1,4 +1,4 @@
-import { requireRole, ApiError } from "@/lib/api";
+import { requireRole, ApiError, isNextControlFlowError } from "@/lib/api";
 import { normalizeDate, todayInOrgTz, currentSettlementMonth } from "@/lib/dates";
 import { prisma } from "@/lib/db";
 import { buildDailyExcel, buildMonthlyExcel, buildDepartmentExcel, buildEmployeeBillExcel } from "@/lib/export/excel";
@@ -50,6 +50,9 @@ export async function GET(req: Request) {
       }
     });
   } catch (err: any) {
+    if (isNextControlFlowError(err)) {
+      throw err;
+    }
     if (err instanceof ApiError) {
       return Response.json({ success: false, message: err.message, code: err.code }, { status: err.status });
     }

@@ -46,13 +46,13 @@ export default function ReportsClient({ session }: { session: ServerSession }) {
         <>
           <div className="card p-4 mb-4 flex items-end gap-3">
             <div><label className="label">Date</label><input type="date" className="input" value={date} onChange={(e) => setDate(e.target.value)} /></div>
-            <button className="btn btn-secondary" onClick={() => downloadFile(`/api/export/excel?report=daily&date=${date}`)}>⬇ Excel</button>
-            <button className="btn btn-secondary" onClick={() => downloadFile(`/api/export/pdf?report=daily&date=${date}`)}>⬇ PDF</button>
+            <button className="btn btn-success" onClick={() => downloadFile(`/api/export/excel?report=daily&date=${date}`)}>⬇ Excel</button>
+            <button className="btn btn-purple" onClick={() => downloadFile(`/api/export/pdf?report=daily&date=${date}`)}>⬇ PDF</button>
           </div>
           {loading ? (
             <TableSkeleton rows={10} cols={2} />
           ) : daily && (
-            <div className="card overflow-hidden">
+            <div className="card overflow-x-auto">
               <table className="data-table">
                 <tbody>
                   {Object.entries({
@@ -73,13 +73,13 @@ export default function ReportsClient({ session }: { session: ServerSession }) {
         <>
           <div className="card p-4 mb-4 flex items-end gap-3">
             <div><label className="label">Month</label><input type="month" className="input" value={month} onChange={(e) => setMonth(e.target.value)} /></div>
-            <button className="btn btn-secondary" onClick={() => downloadFile(`/api/export/excel?report=monthly&month=${month}`)}>⬇ Excel</button>
-            <button className="btn btn-secondary" onClick={() => downloadFile(`/api/export/pdf?report=monthly&month=${month}`)}>⬇ PDF</button>
+            <button className="btn btn-success" onClick={() => downloadFile(`/api/export/excel?report=monthly&month=${month}`)}>⬇ Excel</button>
+            <button className="btn btn-purple" onClick={() => downloadFile(`/api/export/pdf?report=monthly&month=${month}`)}>⬇ PDF</button>
           </div>
           {loading ? (
             <TableSkeleton rows={8} cols={11} />
           ) : monthly && (
-            <div className="card overflow-hidden">
+            <div className="card overflow-x-auto">
               <table className="data-table">
                 <thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Eligible</th><th>Req</th><th>Served</th><th>Not Served</th><th>Cost</th><th>Paid</th><th>Outstanding</th><th>Status</th></tr></thead>
                 <tbody>
@@ -105,13 +105,13 @@ export default function ReportsClient({ session }: { session: ServerSession }) {
         <>
           <div className="card p-4 mb-4 flex items-end gap-3">
             <div><label className="label">Month</label><input type="month" className="input" value={month} onChange={(e) => setMonth(e.target.value)} /></div>
-            <button className="btn btn-secondary" onClick={() => downloadFile(`/api/export/excel?report=department&month=${month}`)}>⬇ Excel</button>
-            <button className="btn btn-secondary" onClick={() => downloadFile(`/api/export/pdf?report=department&month=${month}`)}>⬇ PDF</button>
+            <button className="btn btn-success" onClick={() => downloadFile(`/api/export/excel?report=department&month=${month}`)}>⬇ Excel</button>
+            <button className="btn btn-purple" onClick={() => downloadFile(`/api/export/pdf?report=department&month=${month}`)}>⬇ PDF</button>
           </div>
           {loading ? (
             <TableSkeleton rows={6} cols={9} />
           ) : (
-          <div className="card overflow-hidden">
+          <div className="card overflow-x-auto">
             <table className="data-table">
               <thead><tr><th>Department</th><th>Employees</th><th>Requested</th><th>Served</th><th>Not Served</th><th>Meal Cost</th><th>Paid</th><th>Outstanding</th><th>Consumption %</th></tr></thead>
               <tbody>

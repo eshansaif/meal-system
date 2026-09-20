@@ -13,7 +13,7 @@ export const GET = withRoute(async () => {
 });
 
 export const PATCH = withRoute(async (req: Request) => {
-  const user = await requireRole("SUPER_ADMIN");
+  const user = await requireRole("SUPER_ADMIN", "HR_ADMIN");
   const body = bodySchema.parse(await req.json());
   const saved = await setWorkingDays(body.days);
   await writeAudit({ userId: user.id, action: "WORKING_DAYS_UPDATE", entity: "OrgSetting", newValue: saved });

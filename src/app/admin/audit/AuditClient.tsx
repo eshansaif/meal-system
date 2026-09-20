@@ -29,13 +29,13 @@ export default function AuditClient({ session }: { session: ServerSession }) {
     <Shell role={session.role} name={session.name}>
       <h1 className="text-xl font-semibold text-ink-900 mb-4">Audit Log</h1>
       <div className="card p-4 mb-4 flex flex-wrap gap-3 items-end">
-        <div className="w-64"><label className="label">Search (user / entity ID)</label><input className="input" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} /></div>
-        <div className="w-56"><label className="label">Action</label><input className="input" value={action} onChange={(e) => { setAction(e.target.value); setPage(1); }} placeholder="e.g. PAYMENT_VOID" /></div>
+        <div className="w-full sm:w-64"><label className="label">Search (user / entity ID)</label><input className="input" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} /></div>
+        <div className="w-full sm:w-56"><label className="label">Action</label><input className="input" value={action} onChange={(e) => { setAction(e.target.value); setPage(1); }} placeholder="e.g. PAYMENT_VOID" /></div>
       </div>
       {loading ? (
         <TableSkeleton rows={10} cols={5} />
       ) : (
-        <div className="card overflow-hidden">
+        <div className="card overflow-x-auto">
           <table className="data-table">
             <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Entity</th><th>Reason</th></tr></thead>
             <tbody>

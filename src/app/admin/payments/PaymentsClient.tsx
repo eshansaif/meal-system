@@ -57,11 +57,11 @@ export default function PaymentsClient({ session }: { session: ServerSession }) 
     <Shell role={session.role} name={session.name}>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
         <h1 className="text-xl font-semibold text-ink-900">Payments</h1>
-        <button className="btn btn-primary" onClick={() => setShowCreate(true)}>+ Record Payment</button>
+        <button className="btn btn-success" onClick={() => setShowCreate(true)}>+ Record Payment</button>
       </div>
 
       <div className="card p-4 mb-4 flex flex-wrap gap-3 items-end">
-        <div className="w-64"><label className="label">Search (Employee / Reference)</label><input className="input" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} /></div>
+        <div className="w-full sm:w-64"><label className="label">Search (Employee / Reference)</label><input className="input" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} /></div>
         <div><label className="label">Settlement Month</label><input type="month" className="input" value={month} onChange={(e) => { setMonth(e.target.value); setPage(1); }} /></div>
         <div>
           <label className="label">Status</label>
@@ -76,7 +76,7 @@ export default function PaymentsClient({ session }: { session: ServerSession }) 
       {loading ? (
         <TableSkeleton rows={8} cols={8} />
       ) : (
-        <div className="card overflow-hidden">
+        <div className="card overflow-x-auto">
           <table className="data-table">
             <thead><tr><th>Date</th><th>Employee</th><th>Amount</th><th>Method</th><th>Reference</th><th>Month</th><th>Status</th><th></th></tr></thead>
             <tbody>
@@ -92,7 +92,7 @@ export default function PaymentsClient({ session }: { session: ServerSession }) 
                     <td>{p.referenceNo || "-"}</td>
                     <td>{p.settlementMonth}</td>
                     <td><Badge status={p.status} /></td>
-                    <td>{p.status === "ACTIVE" && <button className="btn btn-ghost text-xs text-red-600" onClick={() => setVoidTarget(p)}>Void</button>}</td>
+                    <td>{p.status === "ACTIVE" && <button className="btn btn-outline-danger text-xs" onClick={() => setVoidTarget(p)}>Void</button>}</td>
                   </tr>
                 ))
               )}
@@ -147,7 +147,7 @@ function CreatePaymentModal({ onClose, onCreated }: { onClose: () => void; onCre
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/40 p-4">
-      <form onSubmit={submit} className="card w-full max-w-lg p-6 space-y-3">
+      <form onSubmit={submit} className="card w-full max-w-lg p-5 sm:p-6 space-y-3 max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-semibold text-ink-900">Record Payment</h3>
         {error && <div className="rounded-lg bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>}
         <div>
@@ -160,7 +160,7 @@ function CreatePaymentModal({ onClose, onCreated }: { onClose: () => void; onCre
             loading={loadingEmp}
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div><label className="label">Payment Date</label><input type="date" className="input" required value={form.paymentDate} onChange={(e) => setForm({ ...form, paymentDate: e.target.value })} /></div>
           <div><label className="label">Amount</label><input type="number" step="0.01" min="0.01" className="input" required value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} /></div>
           <div>

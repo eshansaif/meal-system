@@ -62,15 +62,15 @@ export default function SettlementClient({ session }: { session: ServerSession }
       <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
         <h1 className="text-xl font-semibold text-ink-900">Monthly Settlement</h1>
         <div className="flex gap-2">
-          <button className="btn btn-secondary" disabled={recomputing} onClick={recompute}>{recomputing ? "Recomputing…" : "↻ Recompute Month"}</button>
-          <button className="btn btn-secondary" onClick={() => downloadFile(`/api/export/excel?report=monthly&month=${month}${departmentId ? `&departmentId=${departmentId}` : ""}`)}>⬇ Excel</button>
-          <button className="btn btn-secondary" onClick={() => downloadFile(`/api/export/pdf?report=monthly&month=${month}${departmentId ? `&departmentId=${departmentId}` : ""}`)}>⬇ PDF</button>
+          <button className="btn btn-info" disabled={recomputing} onClick={recompute}>{recomputing ? "Recomputing…" : "↻ Recompute Month"}</button>
+          <button className="btn btn-success" onClick={() => downloadFile(`/api/export/excel?report=monthly&month=${month}${departmentId ? `&departmentId=${departmentId}` : ""}`)}>⬇ Excel</button>
+          <button className="btn btn-purple" onClick={() => downloadFile(`/api/export/pdf?report=monthly&month=${month}${departmentId ? `&departmentId=${departmentId}` : ""}`)}>⬇ PDF</button>
         </div>
       </div>
 
       <div className="card p-4 mb-4 flex flex-wrap gap-3 items-end">
         <div><label className="label">Month</label><input type="month" className="input" value={month} onChange={(e) => { setMonth(e.target.value); setPage(1); }} /></div>
-        <div className="w-56">
+        <div className="w-full sm:w-56">
           <label className="label">Department</label>
           <select className="input" value={departmentId} onChange={(e) => { setDepartmentId(e.target.value); setPage(1); }}>
             <option value="">All departments</option>
@@ -87,7 +87,7 @@ export default function SettlementClient({ session }: { session: ServerSession }
             <option value="OVERPAID">Overpaid</option>
           </select>
         </div>
-        <div className="w-56"><label className="label">Search</label><input className="input" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Employee name / ID" /></div>
+        <div className="w-full sm:w-56"><label className="label">Search</label><input className="input" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Employee name / ID" /></div>
       </div>
 
       {loading ? (
@@ -106,12 +106,12 @@ export default function SettlementClient({ session }: { session: ServerSession }
             </div>
           )}
 
-          <div className="card overflow-hidden">
+          <div className="card overflow-x-auto">
             <table className="data-table">
               <thead><tr><th>Emp ID</th><th>Name</th><th>Department</th><th>Meals</th><th>Meal Cost</th><th>Paid</th><th>Outstanding</th><th>Credit</th><th>Status</th></tr></thead>
               <tbody>
                 {rows.length === 0 ? (
-                  <tr><td colSpan={9} className="text-center text-ink-400 py-8">No settlement data for this filter yet. Try "Recompute Month".</td></tr>
+                  <tr><td colSpan={9} className="text-center text-ink-400 py-8">{'No settlement data for this filter yet. Try "Recompute Month".'}</td></tr>
                 ) : (
                   rows.map((s) => (
                     <tr key={s.id}>

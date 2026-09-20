@@ -58,15 +58,15 @@ export default function EmployeesClient({ session }: { session: ServerSession })
     <Shell role={session.role} name={session.name}>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
         <h1 className="text-xl font-semibold text-ink-900">Employees</h1>
-        <button className="btn btn-primary" onClick={() => setShowCreate(true)}>+ Add Employee</button>
+        <button className="btn btn-success" onClick={() => setShowCreate(true)}>+ Add Employee</button>
       </div>
 
       <div className="card p-4 mb-4 flex flex-wrap gap-3 items-end">
-        <div className="w-64">
+        <div className="w-full sm:w-64">
           <label className="label">Search (ID / Name / Email)</label>
           <input className="input" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search…" />
         </div>
-        <div className="w-56">
+        <div className="w-full sm:w-56">
           <label className="label">Department</label>
           <select className="input" value={departmentId} onChange={(e) => { setDepartmentId(e.target.value); setPage(1); }}>
             <option value="">All departments</option>
@@ -86,7 +86,7 @@ export default function EmployeesClient({ session }: { session: ServerSession })
       {loading ? (
         <TableSkeleton rows={8} cols={7} />
       ) : (
-        <div className="card overflow-hidden">
+        <div className="card overflow-x-auto">
           <table className="data-table">
             <thead>
               <tr><th>ID</th><th>Name</th><th>Department</th><th>Designation</th><th>Status</th><th>Role</th><th></th></tr>
@@ -105,7 +105,7 @@ export default function EmployeesClient({ session }: { session: ServerSession })
                     <td className="text-xs text-ink-500">{e.user.role.replaceAll("_", " ")}</td>
                     <td>
                       <button
-                        className="btn btn-ghost text-xs"
+                        className={`btn text-xs ${e.status === "ACTIVE" ? "btn-outline-danger" : "btn-outline-success"}`}
                         onClick={() => setConfirmTarget({ id: e.id, toStatus: e.status === "ACTIVE" ? "INACTIVE" : "ACTIVE", name: e.name })}
                       >
                         {e.status === "ACTIVE" ? "Deactivate" : "Reactivate"}
@@ -160,10 +160,10 @@ function CreateEmployeeModal({ departments, onClose, onCreated }: { departments:
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/40 p-4">
-      <form onSubmit={submit} className="card w-full max-w-lg p-6 space-y-3">
+      <form onSubmit={submit} className="card w-full max-w-lg p-5 sm:p-6 space-y-3 max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-semibold text-ink-900">Add Employee</h3>
         {error && <div className="rounded-lg bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div><label className="label">Full Name</label><input className="input" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
           <div><label className="label">Email</label><input className="input" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
           <div><label className="label">Phone</label><input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>

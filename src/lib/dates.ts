@@ -1,5 +1,6 @@
 import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 import { format } from "date-fns";
+import type { Prisma } from "@prisma/client";
 
 export const ORG_TZ = process.env.ORG_TIMEZONE || "Asia/Dhaka";
 
@@ -52,16 +53,18 @@ export function isPastCutoff(date: Date, cutoffTime: string): boolean {
   return nowMinutes >= cutoffMinutes;
 }
 
+/**
+ * Formats a monetary amount. Accepts a plain number/string OR a Prisma
+ * `Decimal` (every money field coming straight from the database is a
+ * Decimal, not a number — this is called with both across the codebase,
+ * so it has to handle all three without losing precision).
+ */
 export function formatCurrency(
-  amount: number | string | { toString(): string },
+  amount: number | string | Prisma.Decimal,
   symbol = process.env.CURRENCY_SYMBOL || "৳"
 ): string {
-  const n = typeof amount === "number" ? amount : parseFloat(amount.toString());
-
-  return `${symbol}${n.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  const n = typeof amount === "number" ? amount : Number(amount.toString());
+  return `${symbol}${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export function humanDate(d: Date): string {

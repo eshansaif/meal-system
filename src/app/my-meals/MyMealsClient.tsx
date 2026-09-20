@@ -37,13 +37,13 @@ export default function MyMealsClient({ session }: { session: ServerSession }) {
         <div className="flex items-center gap-2">
           <input type="month" className="input" value={month} onChange={(e) => setMonth(e.target.value)} />
           <button
-            className="btn btn-secondary"
+            className="btn btn-success"
             onClick={() => downloadFile(`/api/export/excel?report=employee-bill&month=${month}`, `bill-${month}.xlsx`)}
           >
             ⬇ Excel
           </button>
           <button
-            className="btn btn-secondary"
+            className="btn btn-purple"
             onClick={() => downloadFile(`/api/export/pdf?report=employee-bill&month=${month}`, `bill-${month}.pdf`)}
           >
             ⬇ PDF
@@ -69,7 +69,7 @@ export default function MyMealsClient({ session }: { session: ServerSession }) {
           )}
 
           <h2 className="text-lg font-semibold text-ink-900 mb-2">Meal History</h2>
-          <div className="card overflow-hidden mb-6">
+          <div className="card overflow-x-auto mb-6">
             <table className="data-table">
               <thead>
                 <tr>
@@ -95,7 +95,7 @@ export default function MyMealsClient({ session }: { session: ServerSession }) {
           </div>
 
           <h2 className="text-lg font-semibold text-ink-900 mb-2">Payment History</h2>
-          <div className="card overflow-hidden">
+          <div className="card overflow-x-auto">
             <table className="data-table">
               <thead>
                 <tr>

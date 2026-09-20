@@ -34,7 +34,21 @@ single organization's HR/Admin team and its employees.
 
 ## 2. Changelog
 
-**v1.1** (this delivery):
+**v1.3**:
+- **Cleaned up noisy (but harmless) build-log errors.** During `npm run build`, Next.js's static-generation check throws an internal `DYNAMIC_SERVER_USAGE` signal for every route that uses `cookies()` — expected and correct for an authenticated app, and the build already completed successfully and marked every such route dynamic (`ƒ`) either way. However, this app's own `withRoute()` error wrapper (and the two export routes' manual try/catch) was catching that internal signal indiscriminately and logging it as `"Unhandled API error"`, which looked alarming in build output even though nothing was actually broken. All three now explicitly detect and re-throw Next.js's own control-flow errors (`DYNAMIC_SERVER_USAGE`, `NEXT_REDIRECT`, `NEXT_NOT_FOUND`) instead of swallowing them, so a clean build produces a clean log.
+
+**v1.2** (this delivery):
+- **Fixed 4 Vercel build failures** reported after deploying v1.1, with root causes addressed (not just patched):
+  - `react/no-unescaped-entities` — fixed every raw `'`/`"` inside JSX text across the app (curly quotes or a JS-string wrapper), including one extra instance the report didn't catch
+  - `Shell.tsx` role type mismatch — now imports Prisma's actual `Role` type instead of a hand-rolled 3-value union. Doing this surfaced a **real bug**: a `CATERING`-role account would have infinite-redirect-looped between `/login` and `/admin/dashboard`, since that role has no page. Fixed with a shared `homeFor()` helper and a new `/pending-access` page for any role without a built portal
+  - `Buffer`/`Response` type error in the Excel export route — applied `new Uint8Array(buffer)`, and also applied the identical fix to the **PDF** export route, which had the same issue but wasn't in the original report
+  - `formatCurrency()` didn't accept Prisma `Decimal` — widened its type to `number | string | Prisma.Decimal`
+- **Mobile: proper hamburger menu.** `Shell.tsx` rewritten with a real slide-in drawer (backdrop, closes on navigation, locks background scroll) instead of a bottom tab bar. Every table now scrolls horizontally within its own card on narrow screens instead of clipping (`overflow-x-auto`), filter/search inputs go full-width on mobile, and modals (Add Employee, Record Payment, confirmation dialogs) cap their height and scroll internally so they never get cut off on short screens.
+- **Every account can change its own password** — `POST /api/auth/change-password` (re-verifies the current password, audited) plus a `/account/password` page linked from the sidebar for every role.
+- **Calendar & Holidays page** (`/admin/calendar`, shared by HR and Super Admin — previously Super-Admin-only): set the company's standing weekly working-day pattern (applies to every month automatically) and block/unblock specific dates. Blocking a date (Holiday) still cascades to cancel that date's responses and un-charge consumption, as in v1.1; the page now also supports removing an entry and makes the "office closed vs. opens specially" distinction explicit in the copy.
+- **Color-coded action buttons.** Added `btn-success` (green), `btn-warning` (amber), `btn-info` (blue), `btn-purple` (violet), and outline variants to the design system, and applied them by intent across the app: Excel exports are green, PDF exports are purple, "take/mark served"-type actions are green, "cancel/void/deactivate"-type actions are red, "recompute" is blue — so the action a button performs is visually obvious at a glance, not just from its label.
+
+**v1.1**:
 - Bumped Next.js to `^14.2.25` — the earlier `14.2.15` pin had known, since-patched
   security advisories (including a middleware authorization bypass); the caret
   range means `npm install` always pulls the latest patched 14.2.x.
@@ -163,11 +177,13 @@ stay on the row forever. Settlement totals exclude voided payments.
 | Create HR/Admin/Catering accounts | ✅ | ❌ | ❌ |
 | Configure meal types / cutoff / enable-disable | ✅ | ❌ | ❌ |
 | Set meal price | ✅ | ❌ | ❌ |
-| Submit / modify own meal response | — | — | ✅ (before cutoff) |
+| Set weekly working-day pattern / block-unblock dates | ✅ | ✅ | ❌ |
+| Submit / modify own meal response (incl. plan-the-month) | — | — | ✅ (per-day, before that day's cutoff) |
 | Mark serving status | ✅ | ✅ | ❌ |
 | Record / void payments | ✅ | ✅ | ❌ |
 | View all employees' financials | ✅ | ✅ | ❌ (own only) |
 | View own meals/payments/bill | — | — | ✅ |
+| Change own password | ✅ | ✅ | ✅ |
 | View audit log | ✅ | ❌ | ❌ |
 | Export reports (Excel/PDF) | ✅ | ✅ | ✅ (own bill only) |
 
@@ -228,7 +244,8 @@ appropriate HTTP status codes (`401`, `403`, `404`, `409`, `422`, `500`).
 | GET/POST | `/api/settlement` | Monthly table / recompute |
 | GET/POST | `/api/holidays` | List / add calendar exceptions (adding a HOLIDAY cascades: cancels that date's responses & un-charges consumption) |
 | DELETE | `/api/holidays/:id` | Remove a calendar exception |
-| GET/PATCH | `/api/settings/working-days` | View / set which weekdays count as working days (Super Admin) |
+| GET/PATCH | `/api/settings/working-days` | View / set which weekdays count as working days (Super Admin & HR/Admin) |
+| POST | `/api/auth/change-password` | Any authenticated account changes its own password |
 | GET | `/api/reports/daily` \| `monthly` \| `department` | Report JSON |
 | GET | `/api/reports/employee/:id` | Employee bill JSON |
 | GET | `/api/export/excel?report=...` | Excel download (daily/monthly/department/employee-bill) |

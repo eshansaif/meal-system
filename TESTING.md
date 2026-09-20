@@ -92,6 +92,17 @@ carry all the financial correctness.
       with `chargeAmount` reset to 0, and the employee's settlement for that
       month recomputes to reflect the removed charge
 
+## Password Change & Roles Without a Portal
+- [ ] Change your own password with the correct current password — confirm
+      login works with the new one and fails with the old one
+- [ ] Try changing password with a wrong current password — confirm a clear
+      `401 INVALID_CURRENT_PASSWORD` and no change happens
+- [ ] As HR (not Super Admin), open `/admin/calendar` — confirm it loads
+      (this moved out of the Super-Admin-only Settings page) and that HR can
+      both set working days and add/remove holidays
+- [ ] As HR, confirm `/admin/settings` and `/admin/audit` are NOT in the
+      sidebar and redirect away if visited directly by URL
+
 ## Edge Cases (spec §53)
 - [ ] Employee with zero meal history this month — dashboard/bill should
       show zeros, not crash

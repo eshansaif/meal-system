@@ -29,9 +29,9 @@ export default function LoginForm() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-ink-950 to-brand-950 px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-6">
-          <div className="text-3xl">🍽</div>
-          <h1 className="text-white text-xl font-semibold mt-2">Meal & Cost Management</h1>
-          <p className="text-white/60 text-sm">Sign in to your account</p>
+          <img src="/brand/logo.png" alt="Smile Food Products Limited" className="w-16 h-16 mx-auto" />
+          <h1 className="text-white text-xl font-semibold mt-3">Meal &amp; Cost Management</h1>
+          <p className="text-white/60 text-sm">Smile Food Products Limited</p>
         </div>
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">
           {error && <div className="rounded-lg bg-red-50 text-red-700 text-sm px-3 py-2">{error}</div>}
@@ -50,6 +50,10 @@ export default function LoginForm() {
             Demo: superadmin@company.com / SuperAdmin@123 &nbsp;·&nbsp; hr@company.com / HrAdmin@123
           </p>
         </form>
+        <div className="mt-6 text-center text-[11px] leading-snug text-white/40">
+          <div>Developed by the IT Department, Smile Food Products Limited</div>
+          {/* <div>Designed &amp; Developed by Md. Shanjeed Saif, Officer &ndash; IT</div> */}
+        </div>
       </div>
     </div>
   );

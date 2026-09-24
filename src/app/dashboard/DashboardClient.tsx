@@ -56,6 +56,12 @@ export default function DashboardClient({ session }: { session: ServerSession })
   const [submitting, setSubmitting] = useState(false);
   const [confirmMonthPlan, setConfirmMonthPlan] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  // Bumped whenever an action changes meal-response data, so the MonthPlan
+  // child (which fetches its own day-by-day list independently) knows to
+  // refetch. Without this, "Set Whole Month" / the main Take/Cancel buttons
+  // updated the database immediately but the visible list below stayed
+  // stale until the page was reloaded — this key is what fixes that.
+  const [monthPlanRefreshKey, setMonthPlanRefreshKey] = useState(0);
 
   const load = useCallback(async () => {
     const [mealTypesRes, dashRes] = await Promise.all([
@@ -89,6 +95,7 @@ export default function DashboardClient({ session }: { session: ServerSession })
     }
     toast("Response saved");
     load();
+    setMonthPlanRefreshKey((k) => k + 1);
   }
 
   async function planWholeMonth() {
@@ -101,6 +108,7 @@ export default function DashboardClient({ session }: { session: ServerSession })
     }
     toast(res.message);
     load();
+    setMonthPlanRefreshKey((k) => k + 1);
   }
 
   return (
@@ -169,7 +177,9 @@ export default function DashboardClient({ session }: { session: ServerSession })
         </div>
       )}
 
-      {mealType && !pageLoading && <MonthPlan mealTypeId={mealType.id} onChanged={load} />}
+      {mealType && !pageLoading && (
+        <MonthPlan mealTypeId={mealType.id} onChanged={load} refreshKey={monthPlanRefreshKey} />
+      )}
 
       {pageLoading ? (
         <>
@@ -236,7 +246,15 @@ export default function DashboardClient({ session }: { session: ServerSession })
   );
 }
 
-function MonthPlan({ mealTypeId, onChanged }: { mealTypeId: string; onChanged: () => void }) {
+function MonthPlan({
+  mealTypeId,
+  onChanged,
+  refreshKey
+}: {
+  mealTypeId: string;
+  onChanged: () => void;
+  refreshKey: number;
+}) {
   const toast = useToast();
   const [days, setDays] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -252,7 +270,7 @@ function MonthPlan({ mealTypeId, onChanged }: { mealTypeId: string; onChanged: (
     setLoading(false);
   }, [mealTypeId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); }, [load, refreshKey]);
 
   async function setDay(date: string, status: "TAKING" | "NOT_TAKING") {
     setBusyDate(date);

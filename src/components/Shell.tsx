@@ -75,9 +75,12 @@ export default function Shell({
     <div className="min-h-screen flex">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex w-60 flex-col bg-ink-950 text-white shrink-0">
-        <div className="px-5 py-5 border-b border-white/10">
-          <div className="text-base font-semibold">🍽 Meal System</div>
-          <div className="text-xs text-white/50 mt-0.5">Corporate Lunch Management</div>
+        <div className="px-5 py-5 border-b border-white/10 flex items-center gap-3">
+          <img src="/brand/logo.png" alt="Smile Food Products Limited" className="w-9 h-9 shrink-0" />
+          <div className="min-w-0">
+            <div className="text-base font-semibold truncate">Meal &amp; Cost Management</div>
+            <div className="text-xs text-white/50 mt-0.5 truncate">Smile Food Products Limited</div>
+          </div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {nav.map((item) => (
@@ -89,7 +92,7 @@ export default function Shell({
             <NavLink key={item.href} item={item} active={!!pathname?.startsWith(item.href)} />
           ))}
         </div>
-        <div className="px-5 py-3 border-t border-white/10 text-xs text-white/50">v1.1.0</div>
+
       </aside>
 
       {/* Mobile slide-in drawer + backdrop */}
@@ -99,17 +102,19 @@ export default function Shell({
         aria-hidden={!menuOpen}
       />
       <aside
-        className={`md:hidden fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] flex flex-col bg-ink-950 text-white transition-transform duration-200 ${
-          menuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`md:hidden fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] flex flex-col bg-ink-950 text-white transition-transform duration-200 ${menuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
       >
-        <div className="px-5 py-5 border-b border-white/10 flex items-center justify-between">
-          <div>
-            <div className="text-base font-semibold">🍽 Meal System</div>
-            <div className="text-xs text-white/50 mt-0.5">Corporate Lunch Management</div>
+        <div className="px-5 py-5 border-b border-white/10 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <img src="/brand/logo.png" alt="Smile Food Products Limited" className="w-9 h-9 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-base font-semibold truncate">Meal &amp; Cost Management</div>
+              <div className="text-xs text-white/50 mt-0.5 truncate">Smile Food Products Limited</div>
+            </div>
           </div>
           <button
             className="p-2 -mr-2 text-white/70 hover:text-white"
@@ -139,6 +144,9 @@ export default function Shell({
             <span aria-hidden>🚪</span> Logout
           </button>
         </div>
+        <div className="px-5 py-3 border-t border-white/10 text-[11px] leading-snug text-white/40">
+          <div>Designed &amp; Developed by Md. Shanjeed Saif, Officer &ndash; IT</div>
+        </div>
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
@@ -151,7 +159,10 @@ export default function Shell({
             >
               <HamburgerIcon />
             </button>
-            <span className="md:hidden font-semibold truncate">🍽 Meal System</span>
+            <span className="md:hidden font-semibold truncate flex items-center gap-2">
+              <img src="/brand/logo.png" alt="Smile Food Products Limited" className="w-6 h-6" />
+              Meal System
+            </span>
             <span className="hidden md:block text-sm text-ink-500 truncate">{consoleLabel}</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -163,6 +174,16 @@ export default function Shell({
           </div>
         </header>
         <main className="flex-1 p-3 sm:p-4 md:p-6 max-w-7xl w-full mx-auto overflow-x-hidden">{children}</main>
+
+        <footer className="border-t border-ink-100 bg-white text-sm text-ink-500 px-3 sm:px-4 md:px-6 py-3 flex items-center justify-center">
+          <div className="flex items-center justify-center gap-2 text-center">
+            <span>
+              © SFPL &nbsp;|&nbsp; Designed &amp; Developed by Md. Shanjeed Saif, Officer &ndash; IT
+            </span>
+          </div>
+        </footer>
+
+
       </div>
     </div>
   );
@@ -181,9 +202,8 @@ function NavLink({
     <Link
       href={item.href}
       onClick={onClick}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-        active ? "bg-brand-600 text-white" : "text-white/70 hover:bg-white/10"
-      }`}
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${active ? "bg-brand-600 text-white" : "text-white/70 hover:bg-white/10"
+        }`}
     >
       <span aria-hidden>{item.icon}</span>
       {item.label}

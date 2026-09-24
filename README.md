@@ -34,6 +34,10 @@ single organization's HR/Admin team and its employees.
 
 ## 2. Changelog
 
+**v1.4**:
+- **Fixed: "Set Whole Month" / the main Take-Lunch buttons didn't update the on-screen monthly plan until reload.** Root cause: the employee dashboard's "This Month's Lunch Plan" list is a child component that fetches its own day-by-day data independently. Actions in the parent (the big Yes/No buttons, and the "Set Whole Month" bulk action) were correctly saving to the database and refreshing the parent's own summary, but had no way to tell that child component its data was now stale — so the list kept showing the old status until the page was reloaded and the child remounted. Fixed with a `refreshKey` that the parent bumps after either action, which the child now watches and re-fetches on. (Checked every other page for the same parent/child split-fetch pattern — this was the only instance.)
+- **Company branding added throughout:** the Smile Food Products Limited logo now appears in the app sidebar (desktop and mobile), the mobile top bar, the login page, the top of every generated PDF report, and the top-left of every generated Excel report sheet. A footer credit — "Developed by the IT Department, Smile Food Products Limited" / "Designed & Developed by Md. Shanjeed Saif, Officer – IT" — appears in the app sidebar, the login page, the bottom of every page of every PDF export, and the last row of every Excel export sheet. All branding constants live in one place (`src/lib/brand.ts`) so the logo/credit can be swapped in a single spot if it ever needs to change.
+
 **v1.3**:
 - **Cleaned up noisy (but harmless) build-log errors.** During `npm run build`, Next.js's static-generation check throws an internal `DYNAMIC_SERVER_USAGE` signal for every route that uses `cookies()` — expected and correct for an authenticated app, and the build already completed successfully and marked every such route dynamic (`ƒ`) either way. However, this app's own `withRoute()` error wrapper (and the two export routes' manual try/catch) was catching that internal signal indiscriminately and logging it as `"Unhandled API error"`, which looked alarming in build output even though nothing was actually broken. All three now explicitly detect and re-throw Next.js's own control-flow errors (`DYNAMIC_SERVER_USAGE`, `NEXT_REDIRECT`, `NEXT_NOT_FOUND`) instead of swallowing them, so a clean build produces a clean log.
 
@@ -366,6 +370,7 @@ src/
     reports.ts            — shared report-data functions (used by UI + export)
     validation.ts         — all zod input schemas
     export/excel.ts, pdf.ts — report file builders
+    brand.ts               — company name, logo (base64), footer credit — edit here to rebrand
   components/            — Shell, SearchableSelect, DataTable bits, etc.
   app/
     login/, dashboard/, my-meals/        — employee-facing pages

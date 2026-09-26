@@ -128,3 +128,36 @@ export async function getLifetimeFinancials(employeeId: string) {
     currentCredit: currentOutstanding.isNegative() ? currentOutstanding.negated().toFixed(2) : "0.00"
   };
 }
+
+
+
+/**
+ * Bulk version of getLifetimeFinancials's "current outstanding" figure, for
+ * every employee that has at least one settlement row — one query instead
+ * of N. Used to show each employee's current due right in the payment
+ * recording form, so HR doesn't have to look it up separately first.
+ *
+ * "Current" = net of the employee's most recent settlement month (that
+ * month's outstanding already carries forward every earlier unpaid month,
+ * per computeAndSaveSettlement), floored at zero with any excess reported
+ * as credit — same rule as getLifetimeFinancials, just batched.
+ */
+export async function getCurrentDueByEmployee(): Promise<Map<string, { outstanding: number; credit: number }>> {
+  // "distinct" + matching orderBy is Prisma's documented pattern for
+  // "latest row per group": ordering by employeeId then settlementMonth
+  // desc, distinct on employeeId, keeps only the newest month per employee.
+  const latestSettlements = await prisma.settlement.findMany({
+    orderBy: [{ employeeId: "asc" }, { settlementMonth: "desc" }],
+    distinct: ["employeeId"]
+  });
+
+  const result = new Map<string, { outstanding: number; credit: number }>();
+  for (const s of latestSettlements) {
+    const net = D(s.outstanding).minus(D(s.credit));
+    result.set(
+      s.employeeId,
+      net.isNegative() ? { outstanding: 0, credit: Number(net.negated()) } : { outstanding: Number(net), credit: 0 }
+    );
+  }
+  return result;
+}
